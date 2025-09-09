@@ -1,5 +1,3 @@
----
-
 # 📈 Fortune 100 Stock LLM (Google Colab + Alpha Vantage + Falcon-7B)
 
 This project builds a **context-aware LLM financial assistant** that can answer natural language questions about **Fortune 100 companies’ stock performance**.
