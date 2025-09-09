@@ -1,5 +1,3 @@
-Here’s a clean **README.md** you can put alongside your notebook on GitHub:
-
 ---
 
 # 📈 Fortune 100 Stock LLM (Google Colab + Alpha Vantage + Falcon-7B)
