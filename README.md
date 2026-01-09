@@ -28,8 +28,8 @@ A secure, private stock analysis platform that runs 100% locally. It combines a 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/local-stock-analyst.git
-cd local-stock-analyst
+git clone https://github.com/yourusername/StockLLM.git
+cd StockLLM
 
 ```
 
