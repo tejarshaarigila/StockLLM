@@ -1,106 +1,120 @@
-# 📈 Fortune 100 Stock LLM (Google Colab + Alpha Vantage + Falcon-7B)
+# 📈 StockLLM (AI Agent + Dashboard)
 
-This project builds a **context-aware LLM financial assistant** that can answer natural language questions about **Fortune 100 companies’ stock performance**.
+A secure, private stock analysis platform that runs 100% locally. It combines a professional financial dashboard with an **AI Copilot** (powered by local LLMs via Ollama) to fetch, visualize, and analyze stock data from Indian exchanges (NSE/BSE).
 
-It uses:
+## ✨ Features
 
-* [Alpha Vantage API](https://www.alphavantage.co/) for stock data
-* [Falcon 7B Instruct](https://huggingface.co/tiiuae/falcon-7b-instruct) (quantized for Colab T4 GPU)
-* A Fortune 100 companies list (`fortune100.csv`) with stock tickers
-* Google Colab’s **secrets system** to keep API keys safe
+* **Dual-Interface Design:**
+* **Main Dashboard:** Professional-grade database viewer with interactive Candlestick charts (Plotly), raw data tables, and date-range filtering.
+* **AI Copilot (Sidebar):** A persistent chat interface to talk to your data.
+
+
+* **Local LLM Integration:** Supports **Mistral 7B** and **Qwen 2.5 (14B)** via Ollama. No data leaves your machine.
+* **Universal Data Syncer:** Automatically fetches missing data from Yahoo Finance (`yfinance`) when the AI agent requests it.
+* **Context-Aware AI:** The agent knows which stock you are viewing on the dashboard and answers questions contextually (e.g., "Why did *it* fall today?").
+* **Robust Data Storage:** Uses a local SQLite database (`stocks.db`) to persist all fetched data for offline access.
 
 ---
 
-## 🚀 Features
+## 🛠️ Prerequisites
 
-* Fetches **daily stock prices** for Fortune 100 companies
-* Summarizes **latest close, 5-day average, and trend** (up/down)
-* Interactive **LLM query loop**: ask questions like
+1. **Python 3.10+**
+2. **Ollama**: Download from [ollama.com](https://ollama.com) to run local LLMs.
 
-  * “Compare Apple and Amazon stock performance over the last 5 days.”
-  * “What is the trend for Microsoft and Google?”
-* Efficient for **Colab T4 GPU** (4-bit quantization of Falcon-7B)
-* Keeps **API keys secure** (no hardcoding)
+---
+
+## 🚀 Setup Guide
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/yourusername/local-stock-analyst.git
+cd local-stock-analyst
+
+```
+
+### 2. Install Dependencies
+
+Create a virtual environment (recommended) and install the required Python packages:
+
+```bash
+# Create virtual env
+python -m venv venv
+
+# Activate (Windows)
+venv\Scripts\activate
+# Activate (Mac/Linux)
+source venv/bin/activate
+
+# Install libraries
+pip install streamlit pandas yfinance plotly langchain-ollama langgraph langchain-core
+
+```
+
+### 3. Initialize Ollama Models
+
+You need to pull the models used by the agent. Open a terminal and run:
+
+```bash
+# Pull the standard model (Fast)
+ollama pull mistral
+
+# Pull the advanced model (Smart)
+ollama pull qwen2.5:14b
+
+```
+
+*Note: Ensure the Ollama app is running in the background.*
+
+---
+
+## 🏃 How to Run
+
+1. **Start the Application:**
+Run the Streamlit app from your terminal:
+```bash
+streamlit run agent.py
+
+```
+
+
+2. **Access the Dashboard:**
+Your browser will automatically open `http://localhost:8501`.
+3. **Using the App:**
+* **First Run:** The database will be empty. Go to the **AI Copilot** (sidebar) and type:
+> *"Fetch data for Reliance and Tata Motors for 2025"*
+
+
+* **Visualize:** Once fetched, refresh the page (or let the auto-refresh handle it). Select the company from the dropdown to see interactive charts.
+* **Context Chat:** Select a stock (e.g., TCS) and ask the AI:
+> *"What was the highest price for this stock?"*
+
+
+
+
 
 ---
 
 ## 📂 Project Structure
 
-```
-📁 fortune100-stock-llm
- ┣ 📜 stock_llm.ipynb      # Main Colab notebook
- ┣ 📜 fortune100.csv       # Fortune 100 company → stock ticker mapping
- ┗ 📜 README.md            # Documentation
-```
+* **`agent.py`**: The main frontend application. Handles the Streamlit UI, AI chat logic, and StateGraph workflow.
+* **`retriever.py`**: The backend logic for fetching data from Yahoo Finance (`yfinance`). Includes a "Universal Syncer" to download and clean data.
+* **`market_db.py`**: The database layer. Manages SQLite connections, schema creation (tables: `metadata`, `prices`), and CRUD operations.
+* **`data/`**: Directory where the SQLite database (`stocks.db`) is stored locally.
+* **`logs/`**: Stores execution logs for debugging agent decisions and tool calls.
 
 ---
 
-## 🔑 Setup (Colab)
+## ⚠️ Troubleshooting
 
-1. Open the notebook in [Google Colab](https://colab.research.google.com/).
-2. Install dependencies:
+**Issue: "Connection Refused"**
 
-   ```bash
-   !pip install openai pandas matplotlib alpha_vantage transformers accelerate bitsandbytes
-   ```
-3. Set your **Alpha Vantage API key** securely:
+* Ensure Ollama is running (`ollama serve` or open the app).
 
-   * Go to **Colab → More → Settings → User secrets**
-   * Add:
+**Issue: Model Hallucinating JSON**
 
-     ```
-     API_KEY = your_alpha_vantage_key_here
-     ```
-4. Run the notebook.
+* The system includes a "Parser Shim" to catch text-based JSON outputs from smaller models like Mistral and convert them into valid tool calls. If issues persist, switch to **Qwen 2.5 (14B)** in the sidebar.
 
----
+**Issue: Missing Data**
 
-## 📊 Workflow
-
-1. **Create Fortune 100 CSV**
-
-   * Maps companies to stock tickers (`fortune100.csv`).
-2. **Fetch stock data**
-
-   * Uses Alpha Vantage free tier (5 API calls/min → `time.sleep(15)`).
-3. **Summarize stock trends**
-
-   * Last close, 5-day average, and trend direction.
-4. **Query with Falcon-7B**
-
-   * Natural language Q\&A based on stock summaries.
-
----
-
-## 🖥️ Example Run
-
-```text
-💡 Stock LLM ready! Type your query about Fortune 100 companies.
-👉 Example: 'Compare Apple and Amazon stock performance over the last 5 days.'
-Type 'exit' to stop.
-
-Enter your query: Compare Apple and Amazon stock performance over the last 5 days.
-
-📊 Response:
-Apple: latest close $185.21, 5-day avg $183.92, trend up
-Amazon: latest close $141.10, 5-day avg $139.84, trend up
-Both companies show upward trends, but Apple is trading higher in absolute price.
-```
-
----
-
-## ⚠️ Notes
-
-* **API Limits**: Alpha Vantage free tier allows **25 requests/day**. The notebook respects this with `time.sleep(15)`.
-* **Private Companies**: Some Fortune 100 firms (State Farm, USAA, etc.) have no stock tickers and are skipped.
-* **GPU**: Optimized for **Colab T4 GPU** with 4-bit quantization.
-
----
-
-## 📌 Next Steps
-
-* Add **historical trend comparison** (30/60/90 days).
-* Extend to **Fortune 500 dataset**.
-* Deploy as a **Streamlit app** with live queries.
-
----
+* If the chart is empty, ask the AI to "fetch data" for that specific date range. The database only stores what you have requested.
